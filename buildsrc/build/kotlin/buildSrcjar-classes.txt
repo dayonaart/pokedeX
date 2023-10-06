@@ -1,0 +1,1 @@
+/home/dayona/AndroidStudioProjects/PokedeX/buildSrc/build/classes/kotlin/main/Dependencies.class:/home/dayona/AndroidStudioProjects/PokedeX/buildSrc/build/classes/kotlin/main/Versions.class
