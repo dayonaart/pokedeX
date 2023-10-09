@@ -11,6 +11,7 @@
 
 package id.dayona.pokedex.viewmodel
 
+import android.content.Context
 import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -27,7 +28,6 @@ import id.dayona.pokedex.dao.AppDatabaseEntity
 import id.dayona.pokedex.data.pokemon.PokemonData
 import id.dayona.pokedex.repository.Repository
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,7 +45,7 @@ class PokeHomeViewModel @Inject constructor(repository: Lazy<Repository>) :
     var pokemonListDetail = MutableStateFlow<List<PokemonData?>>(listOf())
     var initSuccessPokemon = MutableStateFlow(false)
     var pokemonCounter = MutableStateFlow(0)
-    private val limitPokemonCount = 25
+    private val limitPokemonCount = 50
 
     init {
         val readPokemon = repoInstance.getAppDatabaseDao().getAll().find { it.id == 1 }
@@ -54,20 +54,20 @@ class PokeHomeViewModel @Inject constructor(repository: Lazy<Repository>) :
             pokemonListDetail.update {
                 Gson().fromJson(readPokemon.pokemonDataList, itemType)
             }
-            viewModelScope.launch(Dispatchers.IO) {
+            viewModelScope.launch(Dispatchers.Default) {
                 delay(2.seconds)
                 initSuccessPokemon.update { true }
             }
         } else {
-            viewModelScope.launch(Dispatchers.IO) {
-                initPokemon()
+            viewModelScope.launch(Dispatchers.Default) {
+                initPokemon().join()
                 initSuccessPokemon.update { true }
-                updateDatabase()
+                updateDatabase().join()
             }
         }
     }
 
-    private suspend fun updateDatabase() {
+    private fun updateDatabase() = viewModelScope.launch(Dispatchers.IO) {
         pokemonListDetail.collectLatest {
             repoInstance.getAppDatabaseDao()
                 .insert(
@@ -79,8 +79,8 @@ class PokeHomeViewModel @Inject constructor(repository: Lazy<Repository>) :
         }
     }
 
-    private suspend fun initPokemon() =
-        viewModelScope.async(Dispatchers.IO) {
+    private fun initPokemon() =
+        viewModelScope.launch(Dispatchers.IO) {
             repoInstance.getPokemonList(limitPokemonCount).collectLatest {
                 when (it) {
                     is CoreError -> Toast.makeText(
@@ -100,22 +100,24 @@ class PokeHomeViewModel @Inject constructor(repository: Lazy<Repository>) :
                     }
 
                     is CoreSuccess -> {
-                        repeat(it.data?.results?.size ?: 0) { i ->
-                            getDetailPokemon(
-                                it.data?.results?.get(i)?.url!!,
-                                onError = { err ->
-                                    if (err) this.cancel()
-                                })
-
-                            pokemonCounter.update { ((i + 1) * 100) / limitPokemonCount }
+                        val job = launch {
+                            repeat(it.data?.results?.size ?: 0) { i ->
+                                getDetailPokemon(
+                                    it.data?.results?.get(i)?.url!!,
+                                    onError = { err ->
+                                        if (err) this.cancel()
+                                    })
+                                pokemonCounter.update { ((i + 1) * 100) / limitPokemonCount }
+                            }
                         }
+                        job.join()
                     }
                 }
             }
-        }.join()
+        }
 
-    private suspend fun getDetailPokemon(url: String, onError: (Boolean) -> Unit) =
-        viewModelScope.async(Dispatchers.IO) {
+    private fun getDetailPokemon(url: String, onError: (Boolean) -> Unit) =
+        viewModelScope.launch(Dispatchers.Default) {
             repoInstance.getDetailPokemon(url.replace(BuildConfig.BASE_URL, "")).collectLatest {
                 when (it) {
                     is CoreError -> {
@@ -153,5 +155,20 @@ class PokeHomeViewModel @Inject constructor(repository: Lazy<Repository>) :
                     }
                 }
             }
-        }.join()
+        }
+
+
+    suspend fun testAsync(context: Context) {
+        val job = viewModelScope.launch {
+            repeat(1000) { i ->
+                Toast.makeText(context, "job: I'm sleeping $i ...", Toast.LENGTH_SHORT).show()
+                delay(2000L)
+            }
+        }
+//        delay(1300L) // delay a bit
+//        Toast.makeText(context, "main: I'm tired of waiting!", Toast.LENGTH_SHORT).show()
+//        job.cancel() // cancels the job
+//        job.join() // waits for job's completion
+        Toast.makeText(context, "main: Now I can quit.", Toast.LENGTH_SHORT).show()
+    }
 }

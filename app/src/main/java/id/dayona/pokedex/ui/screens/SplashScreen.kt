@@ -99,7 +99,6 @@ interface SplashScreen : UiTools {
                         fontSize = 25.sp
                     )
                 }
-
             }
         }
     }

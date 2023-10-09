@@ -13,10 +13,13 @@ package id.dayona.pokedex.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -25,14 +28,18 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,10 +60,31 @@ import id.dayona.pokedex.ui.uitools.UiTools
 import id.dayona.pokedex.viewmodel.PokeDetailViewModel
 import id.dayona.pokedex.viewmodel.PokeHomeViewModel
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 interface Screen : HomeScreen, GpsScreen, PdaScreen, SplashScreen, DetailPokemonScreen, UiTools {
     override val pokeHomeViewModel: PokeHomeViewModel
     override val pokeDetailViewModel: PokeDetailViewModel
+
+
+    @Composable
+    fun Test() {
+        val coroutineScope = rememberCoroutineScope()
+        val context = LocalContext.current
+        Column(
+            modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            OutlinedButton(onClick = {
+                coroutineScope.launch {
+                    pokeHomeViewModel.testAsync(context)
+                }
+            }) {
+                Text(text = "Test")
+            }
+        }
+    }
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
@@ -72,6 +100,9 @@ interface Screen : HomeScreen, GpsScreen, PdaScreen, SplashScreen, DetailPokemon
             }
         })
         NavHost(navController = navController, startDestination = "splash") {
+            composable("test") {
+                Test()
+            }
             composable("splash") {
                 Splash()
             }

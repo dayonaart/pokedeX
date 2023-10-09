@@ -31,7 +31,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -74,10 +73,10 @@ private fun AddItem(
     currentDes: NavDestination?,
     nav: NavController,
 ) {
+
     val selected = currentDes?.hierarchy?.any { it.route == screen.screenRoute } == true
     val colorText = if (selected) Color.Unspecified else Color.Gray
     val colorBackground = if (selected) Color.Cyan.copy(alpha = 0.3f) else Color.Transparent
-    val ctx = LocalContext.current
     Box(
         modifier = Modifier
             .clip(CircleShape.copy(all = CornerSize(20)))

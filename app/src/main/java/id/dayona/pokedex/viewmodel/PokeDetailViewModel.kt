@@ -34,6 +34,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
@@ -90,7 +91,7 @@ class PokeDetailViewModel @Inject constructor(repository: Lazy<Repository>) : Vi
         )
     }
 
-    fun pokemonCries(id: Int?) = viewModelScope.async {
+    fun pokemonCries(id: Int?) = viewModelScope.launch(Dispatchers.Default) {
         val field = R.raw::class.java.getDeclaredField("pokemon$id")
         field.isAccessible = true
         val cries = field.get(field)

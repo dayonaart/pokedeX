@@ -72,8 +72,8 @@ interface DetailPokemonScreen : UiTools {
         LaunchedEffect(true) {
             if (animatedProgress.value < 1) {
                 pokeDetailViewModel.getPokemonItem(id = id)
-                pokeDetailViewModel.pokemonCries(id).join()
                 pokeDetailViewModel.pokemonCries(id).cancel()
+                pokeDetailViewModel.pokemonCries(id).join()
                 pokeDetailViewModel.startAnimating()
             }
         }
